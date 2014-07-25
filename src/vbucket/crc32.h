@@ -78,7 +78,7 @@ static uint32_t hash_crc32(const char *key, size_t key_length)
     uint64_t x;
     uint32_t crc= UINT32_MAX;
     /*
-    * rechavia code to hash only the key until |
+    * rechavia code to hash only the key until "|"
     */
     int index;
     char* ptr;
