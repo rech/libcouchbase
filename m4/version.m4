@@ -1,0 +1,3 @@
+m4_define([VERSION_NUMBER], [2.3.2])
+m4_define([GIT_DESCRIBE], [2.3.2-0-g7054f1f])
+m4_define([GIT_CHANGESET],[7054f1f9ebb8171f0cdc08b02fa936781b3939a4])
