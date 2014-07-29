@@ -82,7 +82,7 @@ uint32_t hash_crc32(const char *key, size_t key_length)
     * rechavia code to hash only the key until "|"
     */
     int index;
-    char* ptr;
+    char *ptr;
     ptr = strchr(key, "|");
     if (ptr == NULL){
         for (x= 0; x < key_length; x++)
@@ -90,7 +90,7 @@ uint32_t hash_crc32(const char *key, size_t key_length)
 
         return ((~crc) >> 16) & 0x7fff;
     }else{
-        index = ptr - str;
+        index = (int)(ptr - str);
         for (x= 0; x < index; x++)
            crc= (crc >> 8) ^ crc32tab[(crc ^ (uint64_t)key[x]) & 0xff];
 
