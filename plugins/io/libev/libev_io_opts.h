@@ -16,22 +16,12 @@
  */
 
 /**
- * @file
- * libev integration with libcouchbase
- * @author Sergey Avseyev
- */
-
-/**
- * @ingroup LCBIO_IOPS
- * @defgroup LCBIO_LIBEV libev integration
- *
  * libcouchbase_create_libev_io_opts() allows you to create an instance
  * of the ioopts that will utilize libev. You may either supply an event
  * loop (if you'd like to add your own events into the loop), or it will
  * create it's own.
  *
- * @addtogroup LCBIO_LIBEV
- * @{
+ * @author Sergey Avseyev
  */
 #ifndef LIBCOUCHBASE_LIBEV_IO_OPTS_H
 #define LIBCOUCHBASE_LIBEV_IO_OPTS_H 1
@@ -59,5 +49,4 @@ extern "C" {
 }
 #endif
 
-/**@}*/
 #endif

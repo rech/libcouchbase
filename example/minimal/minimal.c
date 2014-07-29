@@ -15,9 +15,7 @@
  *   limitations under the License.
  */
 
-/**
- * @file
- *
+/*
  * BUILD:
  *
  *      cc -o minimal minimal.c -lcouchbase
@@ -39,6 +37,13 @@
 #else
 #include <inttypes.h>
 #endif
+
+static void error_callback(lcb_t instance, lcb_error_t error, const char *errinfo)
+{
+    fprintf(stderr, "ERROR: %s (0x%x), %s\n",
+            lcb_strerror(instance, error), error, errinfo);
+    exit(EXIT_FAILURE);
+}
 
 static void store_callback(lcb_t instance, const void *cookie,
                            lcb_storage_t operation,
@@ -82,13 +87,16 @@ int main(int argc, char *argv[])
     struct lcb_create_st create_options;
 
     memset(&create_options, 0, sizeof(create_options));
-    create_options.version = 3;
 
     if (argc > 1) {
-        create_options.v.v3.connstr = argv[1];
+        create_options.v.v0.host = argv[1];
     }
     if (argc > 2) {
-        create_options.v.v3.passwd = argv[2];
+        create_options.v.v0.user = argv[2];
+        create_options.v.v0.bucket = argv[2];
+    }
+    if (argc > 3) {
+        create_options.v.v0.passwd = argv[3];
     }
     err = lcb_create(&instance, &create_options);
     if (err != LCB_SUCCESS) {
@@ -96,6 +104,7 @@ int main(int argc, char *argv[])
                 lcb_strerror(NULL, err));
         return 1;
     }
+    (void)lcb_set_error_callback(instance, error_callback);
     /* Initiate the connect sequence in libcouchbase */
     if ((err = lcb_connect(instance)) != LCB_SUCCESS) {
         fprintf(stderr, "Failed to initiate connect: %s\n",
@@ -107,11 +116,6 @@ int main(int argc, char *argv[])
     (void)lcb_set_store_callback(instance, store_callback);
     /* Run the event loop and wait until we've connected */
     lcb_wait(instance);
-    if ((err = lcb_get_bootstrap_status(instance)) != LCB_SUCCESS) {
-        fprintf(stderr, "Failed to bootstrap: %s\n", lcb_strerror(instance, err));
-        lcb_destroy(instance);
-        return 1;
-    }
     {
         lcb_store_cmd_t cmd;
         const lcb_store_cmd_t *commands[1];

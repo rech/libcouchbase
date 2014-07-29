@@ -104,7 +104,7 @@
 
 
 #ifdef _WIN32
-#include <libcouchbase/plugins/io/wsaerr.h>
+#include "win32/win_errno_sock.h"
 
 #ifndef __MINGW32__
 #define snprintf _snprintf

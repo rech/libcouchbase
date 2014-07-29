@@ -53,8 +53,14 @@ typedef void (*generic_callback_t)(void);
 #define CbREQ(mr) (mr)->callback
 typedef struct {
     uv_tcp_t t;
-    lcb_ioC_read2_callback callback;
+    lcb_io_read_cb callback;
 } my_tcp_t;
+
+typedef struct {
+    uv_write_t w;
+    lcb_io_write_cb callback;
+} my_write_t;
+
 
 /**
  * Wrapper for lcb_sockdata_t
@@ -71,11 +77,13 @@ typedef struct {
     /** Reference count */
     unsigned int refcount;
 
+    /** Current iov index in the read buffer */
+    unsigned char cur_iov;
+
     /** Flag indicating whether uv_close has already been called  on the handle */
     unsigned char uv_close_called;
 
-    lcb_IOV iov;
-    void *rdarg;
+    unsigned char lcb_close_called;
 
     struct {
         int read;
@@ -84,12 +92,21 @@ typedef struct {
 
 } my_sockdata_t;
 
-
 typedef struct {
-    uv_write_t w;
-    lcb_ioC_write2_callback callback;
+    lcb_io_writebuf_t base;
+
+    /** Write handle.
+     * ->data field contains the callback
+     */
+    my_write_t write;
+
+    /** Buffer structures corresponding to buf_info */
+    uv_buf_t uvbuf[2];
+
+    /** Parent socket structure */
     my_sockdata_t *sock;
-} my_write_t;
+
+} my_writebuf_t;
 
 
 typedef struct {
@@ -124,6 +141,7 @@ typedef struct {
 
     union {
         lcb_io_connect_cb conn;
+        lcb_io_error_cb err;
         generic_callback_t cb_;
     } cb;
 
@@ -135,7 +153,7 @@ typedef struct {
  ** Common Macros                                                            **
  ******************************************************************************
  ******************************************************************************/
-#define PTR_FROM_FIELD(t, p, fld) ((t*)(void*)((char*)p-(offsetof(t, fld))))
+#define PTR_FROM_FIELD(t, p, fld) ((t*)((char*)p-(offsetof(t, fld))))
 
 #define incref_iops(io) (io)->iops_refcount++
 

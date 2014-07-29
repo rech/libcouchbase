@@ -37,7 +37,7 @@ static void initiate(lcb_t instance) {
      * attach all of the callbacks you want. Let's for instance just
      * set it to sync mode
      */
-    (void)instance;
+    lcb_behavior_set_syncmode(instance, LCB_SYNCHRONOUS);
 }
 
 int main(void) {

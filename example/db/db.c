@@ -54,12 +54,10 @@ static void handle_sigint(int sig)
 #define INSTALL_SIGINT_HANDLER()
 #endif
 
-static void bootstrap_callback(lcb_t instance, lcb_error_t error)
+static void error_callback(lcb_t instance, lcb_error_t error, const char *errinfo)
 {
-    if (error == LCB_SUCCESS) {
-        return;
-    }
-    fprintf(stderr, "ERROR: %s (0x%x)\n", lcb_strerror(instance, error), error);
+    fprintf(stderr, "ERROR: %s (0x%x), %s\n",
+            lcb_strerror(instance, error), error, errinfo);
     exit(EXIT_FAILURE);
 }
 
@@ -116,7 +114,6 @@ int main(int argc, char *argv[])
     long nbytes = 6; /* the size of the value */
 
     memset(&create_options, 0, sizeof(create_options));
-    create_options.version = 3;
 
     if (argc > 1) {
         key = argv[1];
@@ -126,10 +123,14 @@ int main(int argc, char *argv[])
         nbytes = atol(argv[2]);
     }
     if (argc > 3) {
-        create_options.v.v3.connstr = argv[3];
+        create_options.v.v0.host = argv[3];
     }
     if (argc > 4) {
-        create_options.v.v3.passwd = argv[4];
+        create_options.v.v0.user = argv[4];
+        create_options.v.v0.bucket = argv[4];
+    }
+    if (argc > 5) {
+        create_options.v.v0.passwd = argv[5];
     }
 
     INSTALL_SIGINT_HANDLER();
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
                 lcb_strerror(NULL, err));
         exit(EXIT_FAILURE);
     }
-    lcb_set_bootstrap_callback(instance, bootstrap_callback);
+    (void)lcb_set_error_callback(instance, error_callback);
     /* Initiate the connect sequence in libcouchbase */
     if ((err = lcb_connect(instance)) != LCB_SUCCESS) {
         fprintf(stderr, "Failed to initiate connect: %s\n",
@@ -155,10 +156,10 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "key: \"%s\"\n", key);
     fprintf(stderr, "value size: %ld\n", nbytes);
-    fprintf(stderr, "connection string: %s\n",
-        create_options.v.v3.connstr ? create_options.v.v3.connstr : "");
-    fprintf(stderr, "password: %s\n",
-        create_options.v.v0.passwd ? create_options.v.v3.passwd : "");
+    fprintf(stderr, "host: %s\n", lcb_get_host(instance));
+    fprintf(stderr, "port: %s\n", lcb_get_port(instance));
+    fprintf(stderr, "bucket: %s\n", create_options.v.v0.bucket ? create_options.v.v0.bucket : "default");
+    fprintf(stderr, "password: %s\n", create_options.v.v0.passwd);
     bytes = malloc(nbytes);
 
     {

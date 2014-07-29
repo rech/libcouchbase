@@ -101,10 +101,11 @@ static int get_env_plugin_info(plugin_info *info)
     plugin_info *cur = NULL;
     memset(info, 0, sizeof(*info));
 
-    if (!lcb_getenv_nonempty_multi(info->s_soname, sizeof(info->s_soname),
-        "LIBCOUCHBASE_EVENT_PLUGIN_NAME", "LCB_IOPS_NAME", NULL)) {
+    if (!lcb_getenv_nonempty("LIBCOUCHBASE_EVENT_PLUGIN_NAME",
+                             info->s_soname, sizeof(info->s_soname))) {
         return 0;
     }
+
 
     for (cur = builtin_plugins; cur->base; cur++) {
         if (strlen(cur->base) != strlen(info->s_soname)) {
@@ -117,8 +118,8 @@ static int get_env_plugin_info(plugin_info *info)
         }
     }
 
-    if (!lcb_getenv_nonempty_multi(info->s_symbol, sizeof(info->s_symbol),
-        "LIBCOUCHBASE_EVENT_PLUGIN_SYMBOL", "LCB_IOPS_SYMBOL", NULL)) {
+    if (!lcb_getenv_nonempty("LIBCOUCHBASE_EVENT_PLUGIN_SYMBOL",
+                             info->s_symbol, sizeof(info->s_symbol))) {
         return -1;
     }
 
@@ -345,8 +346,7 @@ static lcb_error_t generate_options(plugin_info *pi,
                 int want_debug;
                 lcb_error_t ret;
 
-                if (lcb_getenv_boolean_multi("LIBCOUCHBASE_DLOPEN_DEBUG",
-                    "LCB_DLOPEN_DEBUG", NULL)) {
+                if (lcb_getenv_boolean("LIBCOUCHBASE_DLOPEN_DEBUG")) {
                     want_debug = 1;
                 } else {
                     want_debug = want_dl_debug;
@@ -415,8 +415,7 @@ static lcb_error_t create_v1(lcb_io_opt_t *io,
     int want_debug;
     lcb_error_t ret;
 
-    if (lcb_getenv_boolean_multi("LIBCOUCHBASE_DLOPEN_DEBUG",
-        "LCB_DLOPEN_DEBUG", NULL)) {
+    if (lcb_getenv_boolean("LIBCOUCHBASE_DLOPEN_DEBUG")) {
         want_debug = 1;
     } else {
         want_debug = want_dl_debug;
@@ -450,7 +449,7 @@ static lcb_error_t create_v1(lcb_io_opt_t *io,
         lcb_io_opt_t iop = *io;
         iop->dlhandle = plugin.dlhandle;
         /* check if plugin selected compatible version */
-        if (iop->version < 0 || iop->version > 2) {
+        if (iop->version < 0 || iop->version > 1) {
             lcb_destroy_io_ops(iop);
             return LCB_PLUGIN_VERSION_MISMATCH;
         }
@@ -470,7 +469,7 @@ static lcb_error_t create_v2(lcb_io_opt_t *io,
     } else {
         lcb_io_opt_t iop = *io;
         /* check if plugin selected compatible version */
-        if (iop->version < 0 || iop->version > 2) {
+        if (iop->version < 0 || iop->version > 1) {
             lcb_destroy_io_ops(iop);
             return LCB_PLUGIN_VERSION_MISMATCH;
         }

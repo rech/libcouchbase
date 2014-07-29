@@ -16,7 +16,7 @@
  */
 
 #include "internal.h"
-#include "contrib/genhash/genhash.h"
+#include "genhash.h"
 
 /**
  * Structures for common hash table operations

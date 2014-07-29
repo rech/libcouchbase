@@ -4,34 +4,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-
-#if defined(unix) || defined(__unix__) || defined(__unix) || defined(_POSIX_VERSION)
-    #include <unistd.h>
-    #include <pthread.h>
-    #include <sys/types.h>
-
-    #if defined(__linux__)
-        #include <sys/syscall.h>
-        #define GET_THREAD_ID() (long)syscall(SYS_gettid)
-        #define THREAD_ID_FMT "ld"
-
-    #elif defined(__APPLE__)
-        #define GET_THREAD_ID() pthread_mach_thread_np(pthread_self())
-        #define THREAD_ID_FMT "u"
-    #else
-        /* other unix? */
-        #define GET_THREAD_ID() 0
-        #define THREAD_ID_FMT "d"
-    #endif
-#elif defined(_WIN32)
-    #define GET_THREAD_ID() GetCurrentThreadId()
-    #define THREAD_ID_FMT "d"
-#else
-    #define GET_THREAD_ID() 0
-    #define THREAD_ID_FMT "d"
-#endif
-
 static hrtime_t start_time = 0;
+
+struct console_logprocs_st {
+    struct lcb_logprocs_st base;
+    int minlevel;
+};
 
 static void console_log(struct lcb_logprocs_st *procs,
                         unsigned int iid,
@@ -42,7 +20,7 @@ static void console_log(struct lcb_logprocs_st *procs,
                         const char *fmt,
                         va_list ap);
 
-static struct lcb_CONSOLELOGGER console_logprocs = {
+static struct console_logprocs_st console_logprocs = {
         {0 /* version */, {{console_log} /* v1 */} /*v*/},
         /** Minimum severity */
         LCB_LOG_INFO
@@ -88,7 +66,7 @@ static void console_log(struct lcb_logprocs_st *procs,
 {
 
     hrtime_t now;
-    struct lcb_CONSOLELOGGER *vprocs = (struct lcb_CONSOLELOGGER *)procs;
+    struct console_logprocs_st *vprocs = (struct console_logprocs_st *)procs;
 
     if (severity < vprocs->minlevel) {
         return;
@@ -105,9 +83,8 @@ static void console_log(struct lcb_logprocs_st *procs,
 
     fprintf(stderr, "%lums ", (unsigned long)(now - start_time) / 1000000);
 
-    fprintf(stderr, "[I%d] {%"THREAD_ID_FMT"} [%s] (%s - L:%d) ",
+    fprintf(stderr, "[I%d] [%s] (%s - L:%d) ",
             iid,
-            GET_THREAD_ID(),
             level_to_string(severity),
             subsys,
             srcline);
